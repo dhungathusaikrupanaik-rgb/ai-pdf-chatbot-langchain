@@ -1,6 +1,5 @@
 import {
   Client,
-  DefaultValues,
   Thread,
   ThreadState,
 } from '@langchain/langgraph-sdk';
@@ -105,7 +104,7 @@ export class LangGraphBase {
   async resumeThread(
     threadId: string,
     assistantId: string,
-    resumeValue: any,
+    resumeValue: unknown,
     config?: {
       configurable?: { [key: string]: unknown };
     },

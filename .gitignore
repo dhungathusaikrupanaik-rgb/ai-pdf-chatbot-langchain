@@ -51,3 +51,6 @@ llm_context/
 test_docs
 
 .swc
+
+# LangGraph API
+.langgraph_api

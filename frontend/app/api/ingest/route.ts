@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
 
     // Run the ingestion graph
     const thread = await langGraphServerClient.createThread();
-    const ingestionRun = await langGraphServerClient.client.runs.wait(
+    await langGraphServerClient.client.runs.wait(
       thread.thread_id,
       'ingestion_graph',
       {

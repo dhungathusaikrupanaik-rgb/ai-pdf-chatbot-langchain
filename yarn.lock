@@ -2121,6 +2121,10 @@ agentkeepalive@^4.2.1:
   dependencies:
     humanize-ms "^1.2.1"
 
+"ai-pdf-chatbot-langchain@file:..":
+  version "0.0.1"
+  resolved "file:"
+
 ajv@^6.12.4:
   version "6.12.6"
   resolved "https://registry.npmjs.org/ajv/-/ajv-6.12.6.tgz"
@@ -2409,6 +2413,7 @@ babel-preset-jest@^29.6.3:
     "@langchain/openai" "^0.3.17"
     "@mendable/firecrawl-js" "^1.15.7"
     "@supabase/supabase-js" "^2.48.1"
+    ai-pdf-chatbot-langchain "file:.."
     chromadb "^1.10.4"
     pdf-parse "^1.1.1"
     uuid "^11.0.5"
