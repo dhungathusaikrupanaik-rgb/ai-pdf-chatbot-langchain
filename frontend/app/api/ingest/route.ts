@@ -65,10 +65,10 @@ export async function POST(request: NextRequest) {
       try {
         const docs = await processPDF(file);
         allDocs.push(...docs);
-      } catch (error: any) {
-        console.error(`Error processing file ${file.name}:`, error);
-        // Continue processing other files; errors are logged
-      }
+    } catch (error: unknown) {
+      console.error(`Error processing file ${file.name}:`, error);
+      // Continue processing other files; errors are logged
+    }
     }
 
     if (!allDocs.length) {
@@ -99,10 +99,10 @@ export async function POST(request: NextRequest) {
       message: 'Documents ingested successfully',
       threadId: thread.thread_id,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error processing files:', error);
     return NextResponse.json(
-      { error: 'Failed to process files', details: error.message },
+      { error: 'Failed to process files', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 },
     );
   }
