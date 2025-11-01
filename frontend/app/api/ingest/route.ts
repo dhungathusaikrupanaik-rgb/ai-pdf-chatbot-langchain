@@ -1,6 +1,6 @@
 // app/api/ingest/route.ts
 import { indexConfig } from '@/constants/graphConfigs';
-import { langGraphServerClient } from '@/lib/langgraph-server';
+import { getLangGraphServerClient } from '@/lib/langgraph-server';
 import { processPDF } from '@/lib/pdf';
 import { Document } from '@langchain/core/documents';
 import { NextRequest, NextResponse } from 'next/server';
@@ -79,6 +79,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Run the ingestion graph
+    const langGraphServerClient = getLangGraphServerClient();
     const thread = await langGraphServerClient.createThread();
     await langGraphServerClient.client.runs.wait(
       thread.thread_id,
