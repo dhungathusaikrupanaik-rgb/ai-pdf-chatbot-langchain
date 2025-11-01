@@ -12,7 +12,7 @@ export function reduceDocs(
   existing?: Document[],
   newDocs?:
     | Document[]
-    | { [key: string]: any }[]
+    | Record<string, unknown>[]
     | string[]
     | string
     | 'delete',
@@ -54,7 +54,7 @@ export function reduceDocs(
             // It's a generic object, treat it as metadata
             newList.push({
               pageContent: '',
-              metadata: { ...(item as { [key: string]: any }), uuid: itemId },
+              metadata: { ...(item as Record<string, unknown>), uuid: itemId },
             });
           }
           existingIds.add(itemId);

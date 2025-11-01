@@ -15,7 +15,7 @@ export const AgentStateAnnotation = Annotation.Root({
    */
   documents: Annotation<
     Document[],
-    Document[] | { [key: string]: any }[] | string[] | string | 'delete'
+    Document[] | Record<string, unknown>[] | string[] | string | 'delete'
   >({
     default: () => [],
     reducer: reduceDocs,
