@@ -1,5 +1,8 @@
-# TODO: Fix Tailwind CSS PostCSS Plugin Issue
+# TODO: Test Backend
 
-- [x] Install @tailwindcss/postcss package in frontend directory
-- [x] Update frontend/postcss.config.mjs to import the plugin from @tailwindcss/postcss
-- [x] Run build command to verify the fix
+- [x] Run Jest tests in backend directory using `npm test`
+- [x] Review test results for any failures
+- [x] If failures, investigate and fix issues
+  - [x] Fix ingestion_graph/state.test.ts: extra "uuid" in metadata
+  - [x] Set up valid OpenAI API key for integration tests
+  - [ ] Ensure Supabase credentials are correct (missing SUPABASE_SERVICE_ROLE_KEY)
