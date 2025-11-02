@@ -5,7 +5,7 @@ import path from 'path';
 import fetch from 'node-fetch';
 import FormData from 'form-data';
 import { processPDF } from '@/lib/pdf';
-import { langGraphServerClient } from '@/lib/langgraph-server';
+import { getLangGraphServerClient } from '@/lib/langgraph-server';
 
 // Mock the processPDF function
 jest.mock('@/lib/pdf', () => ({
