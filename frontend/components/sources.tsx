@@ -93,7 +93,7 @@ function SourceCard({
                   </h4>
                   <div className="flex items-center gap-2 mt-1">
                     <Badge variant="secondary" className="text-xs">
-                      <Page className="w-3 h-3 mr-1" />
+                      <File className="w-3 h-3 mr-1" />
                       Page {pageNumbers || 'N/A'}
                     </Badge>
                     {pageCount && (
