@@ -33,6 +33,16 @@
     --ring: 0 0% 3.9%;
 
     --radius: 0.5rem;
+
+    /* Enhanced color palette */
+    --gradient-1: 163 75% 42%;
+    --gradient-2: 210 75% 60%;
+    --gradient-3: 251 75% 55%;
+
+    /* Semantic colors */
+    --success: 142 76% 36%;
+    --warning: 38 92% 50%;
+    --info: 199 89% 48%;
   }
 
   .dark {
@@ -63,6 +73,11 @@
     --border: 0 0% 14.9%;
     --input: 0 0% 14.9%;
     --ring: 0 0% 83.1%;
+
+    /* Enhanced dark mode colors */
+    --gradient-1: 163 65% 52%;
+    --gradient-2: 210 65% 70%;
+    --gradient-3: 251 65% 65%;
   }
 }
 
@@ -72,6 +87,160 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Enhanced scrollbar styling */
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
+  }
+
+  /* Firefox scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) hsl(var(--muted));
+  }
+}
+
+@layer components {
+  /* Gradient backgrounds */
+  .gradient-bg {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--gradient-1)),
+      hsl(var(--gradient-2)),
+      hsl(var(--gradient-3))
+    );
+    background-size: 200% 200%;
+    animation: gradient-x 3s ease infinite;
+  }
+
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background: linear-gradient(
+      135deg,
+      hsl(var(--gradient-1)),
+      hsl(var(--gradient-2))
+    );
+  }
+
+  /* Enhanced message styles */
+  .message-user {
+    @apply bg-primary text-primary-foreground;
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.9));
+  }
+
+  .message-assistant {
+    @apply bg-muted;
+    background: linear-gradient(135deg, hsl(var(--muted)), hsl(var(--muted) / 0.95));
+  }
+
+  /* Glass effect */
+  .glass {
+    @apply bg-background/80 backdrop-blur-md border border-border/50;
+  }
+
+  /* Focus visible styles for accessibility */
+  .focus-visible-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  }
+
+  /* Animation classes */
+  .animate-slide-up {
+    animation: slide-in-from-bottom 0.3s ease-out;
+  }
+
+  .animate-slide-down {
+    animation: slide-in-from-top 0.3s ease-out;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+
+  /* Loading shimmer effect */
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shimmer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--muted) / 0.5),
+      transparent
+    );
+    animation: shimmer 2s infinite;
+  }
+
+  /* Mobile touch targets */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  /* Enhanced file upload area */
+  .drop-zone {
+    @apply border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center transition-all duration-200;
+  }
+
+  .drop-zone.dragover {
+    @apply border-primary bg-primary/5;
+  }
+
+  /* Responsive typography */
+  .text-fluid-xs {
+    @apply text-xs sm:text-sm;
+  }
+
+  .text-fluid-sm {
+    @apply text-sm sm:text-base;
+  }
+
+  .text-fluid-base {
+    @apply text-base sm:text-lg;
+  }
+
+  .text-fluid-lg {
+    @apply text-lg sm:text-xl lg:text-2xl;
+  }
+
+  .text-fluid-xl {
+    @apply text-xl sm:text-2xl lg:text-3xl;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    @apply text-black bg-white;
+  }
+
+  .message-user,
+  .message-assistant {
+    @apply bg-gray-100 text-black border border-gray-300;
   }
 }
 
