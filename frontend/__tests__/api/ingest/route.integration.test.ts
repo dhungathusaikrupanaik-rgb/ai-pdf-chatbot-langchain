@@ -19,21 +19,22 @@ jest.mock('@/lib/pdf', () => ({
   }),
 }));
 
-// Mock the langGraphServerClient
+// Mock the getLangGraphServerClient
 jest.mock('@/lib/langgraph-server', () => {
   return {
-    langGraphServerClient: {
+    getLangGraphServerClient: jest.fn().mockReturnValue({
       createThread: jest
         .fn()
         .mockResolvedValue({ thread_id: 'test-thread-id' }),
       client: {
         runs: {
+          wait: jest.fn().mockResolvedValue({}),
           stream: jest.fn().mockImplementation(async function* () {
             yield { data: 'test' };
           }),
         },
       },
-    },
+    }),
   };
 });
 describe('PDF Ingest Route (node-fetch)', () => {
