@@ -2460,7 +2460,7 @@ babel-preset-jest@^29.6.3:
     babel-plugin-jest-hoist "^29.6.3"
     babel-preset-current-node-syntax "^1.0.0"
 
-"backend@file:/workspace/cmhhd3n77009qo6ik46dddffc/ai-pdf-chatbot-langchain/backend":
+"backend@file:C:\\Users\\Sai\\OneDrive\\Desktop\\ai-pdf-chatbot-langchain-1\\backend":
   version "0.0.1"
   resolved "file:backend"
   dependencies:
@@ -3947,6 +3947,7 @@ framer-motion@^12.23.24:
     tslib "^2.4.0"
 
 "frontend@file:/workspace/cmhhd3n77009qo6ik46dddffc/ai-pdf-chatbot-langchain/frontend":
+"frontend@file:C:\\Users\\Sai\\OneDrive\\Desktop\\ai-pdf-chatbot-langchain-1\\frontend":
   version "0.1.0"
   resolved "file:frontend"
   dependencies:

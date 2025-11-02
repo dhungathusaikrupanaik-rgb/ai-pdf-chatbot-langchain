@@ -4,23 +4,19 @@
     "private": true,
     "version": "0.0.1",
     "author": "Mayo Oshin",
-  "license": "MIT",
-  "type": "module",
-  "packageManager": "yarn@1.22.22",
-  "workspaces": [
-    "backend",
-    "frontend"
-  ],
-    "scripts": {
-      "build": "yarn run turbo:command build",
-      "turbo:command": "yarn turbo",
-      "lint": "yarn run turbo:command lint",
-      "lint:fix": "yarn run turbo:command lint:fix",
-      "lint:all": "yarn --cwd backend lint:all",
-      "format": "yarn run turbo:command format",
-      "format:check": "yarn run turbo:command format:check"
-    },
+    "license": "MIT",
+    "type": "module",
+    "packageManager": "yarn@1.22.22",
+    "workspaces": [
+        "frontend",
+        "backend"
+    ],
     "devDependencies": {
-      "turbo": "latest"
+        "turbo": "latest"
+    },
+    "scripts": {
+        "build": "turbo run build",
+        "dev": "turbo run dev --parallel",
+        "lint": "turbo run lint"
     }
-  }
+}
