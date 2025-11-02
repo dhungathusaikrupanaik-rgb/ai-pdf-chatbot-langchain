@@ -163,6 +163,9 @@ export default function Home() {
               typeof data === 'object' &&
               'retrieveDocuments' in data &&
               data.retrieveDocuments &&
+              typeof data.retrieveDocuments === 'object' &&
+              data.retrieveDocuments !== null &&
+              'documents' in data.retrieveDocuments &&
               Array.isArray(data.retrieveDocuments.documents)
             ) {
               const retrievedDocs = (data as RetrieveDocumentsNodeUpdates)
