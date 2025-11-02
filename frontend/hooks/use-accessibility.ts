@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 // Utility function to announce messages to screen readers
 export function announceToScreenReader(message: string, priority: 'polite' | 'assertive' = 'polite') {
