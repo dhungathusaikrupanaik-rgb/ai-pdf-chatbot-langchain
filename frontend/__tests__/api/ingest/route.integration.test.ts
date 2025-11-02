@@ -5,7 +5,7 @@ import path from 'path';
 import fetch from 'node-fetch';
 import FormData from 'form-data';
 import { processPDF } from '@/lib/pdf';
-import { langGraphServerClient } from '@/lib/langgraph-server';
+import { getLangGraphServerClient } from '@/lib/langgraph-server';
 
 // Mock the processPDF function
 jest.mock('@/lib/pdf', () => ({
@@ -19,21 +19,22 @@ jest.mock('@/lib/pdf', () => ({
   }),
 }));
 
-// Mock the langGraphServerClient
+// Mock the getLangGraphServerClient
 jest.mock('@/lib/langgraph-server', () => {
   return {
-    langGraphServerClient: {
+    getLangGraphServerClient: jest.fn().mockReturnValue({
       createThread: jest
         .fn()
         .mockResolvedValue({ thread_id: 'test-thread-id' }),
       client: {
         runs: {
+          wait: jest.fn().mockResolvedValue({}),
           stream: jest.fn().mockImplementation(async function* () {
             yield { data: 'test' };
           }),
         },
       },
-    },
+    }),
   };
 });
 describe('PDF Ingest Route (node-fetch)', () => {
@@ -152,8 +153,8 @@ startxref
       body: formData,
     });
 
-    expect(langGraphServerClient.createThread).toHaveBeenCalled();
-    expect(langGraphServerClient.client.runs.stream).toHaveBeenCalledWith(
+    expect(getLangGraphServerClient().createThread).toHaveBeenCalled();
+    expect(getLangGraphServerClient().client.runs.wait).toHaveBeenCalledWith(
       'test-thread-id',
       'ingestion_graph',
       {

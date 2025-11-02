@@ -4,24 +4,28 @@ import type React from 'react';
 
 import { useToast } from '@/hooks/use-toast';
 import { useRef, useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Paperclip, ArrowUp, Loader2 } from 'lucide-react';
-import { ExamplePrompts } from '@/components/example-prompts';
 import { ChatMessage } from '@/components/chat-message';
 import { FilePreview } from '@/components/file-preview';
+import { ChatInput } from '@/components/chat-input';
+import { FileUpload } from '@/components/file-upload';
+import { WelcomeState } from '@/components/welcome-state';
+import { Sources } from '@/components/sources';
 import { client } from '@/lib/langgraph-client';
 import {
   PDFDocument,
   RetrieveDocumentsNodeUpdates,
 } from '@/types/graphTypes';
+
 export default function Home() {
-  const { toast } = useToast(); // Add this hook
+  const { toast } = useToast();
   const [messages, setMessages] = useState<
     Array<{
       role: 'user' | 'assistant';
       content: string;
       sources?: PDFDocument[];
+      timestamp?: Date;
     }>
   >([]);
   const [input, setInput] = useState('');
@@ -29,52 +33,51 @@ export default function Home() {
   const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [threadId, setThreadId] = useState<string | null>(null);
+  const [showFileUpload, setShowFileUpload] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const abortControllerRef = useRef<AbortController | null>(null); // Track the AbortController
-  const messagesEndRef = useRef<HTMLDivElement>(null); // Add this ref
-  const lastRetrievedDocsRef = useRef<PDFDocument[]>([]); // useRef to store the last retrieved documents
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const lastRetrievedDocsRef = useRef<PDFDocument[]>([]);
 
   useEffect(() => {
-    // Create a thread when the component mounts
     const initThread = async () => {
-      // Skip if we already have a thread
       if (threadId) return;
 
       try {
         const thread = await client.createThread();
-
         setThreadId(thread.thread_id);
       } catch (error) {
         console.error('Error creating thread:', error);
         toast({
-          title: 'Error',
+          title: 'Connection Error',
           description:
-            'Error creating thread. Please make sure you have set the LANGGRAPH_API_URL environment variable correctly. ' +
-            error,
+            'Unable to connect to the chat service. Please make sure you have set the LANGGRAPH_API_URL environment variable correctly.',
           variant: 'destructive',
         });
       }
     };
     initThread();
-  }, []);
+  }, [threadId, toast]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || !threadId || isLoading) return;
+  const handleSubmit = async (message: string) => {
+    if (!message.trim() || !threadId || isLoading) return;
 
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
 
-    const userMessage = input.trim();
+    const userMessage = message.trim();
+    const timestamp = new Date();
+
     setMessages((prev) => [
       ...prev,
-      { role: 'user', content: userMessage, sources: undefined }, // Clear sources for new user message
-      { role: 'assistant', content: '', sources: undefined }, // Clear sources for new assistant message
+      { role: 'user', content: userMessage, sources: undefined, timestamp },
+      { role: 'assistant', content: '', sources: undefined, timestamp },
     ]);
     setInput('');
     setIsLoading(true);
@@ -82,7 +85,7 @@ export default function Home() {
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
-    lastRetrievedDocsRef.current = []; // Clear the last retrieved documents
+    lastRetrievedDocsRef.current = [];
 
     try {
       const response = await fetch('/api/chat', {
@@ -134,7 +137,6 @@ export default function Home() {
               if (lastObj?.type === 'ai') {
                 const partialContent = lastObj.content ?? '';
 
-                // Only display if content is a string message
                 if (
                   typeof partialContent === 'string' &&
                   !partialContent.startsWith('{')
@@ -148,8 +150,8 @@ export default function Home() {
                       newArr[newArr.length - 1].content = partialContent;
                       newArr[newArr.length - 1].sources =
                         lastRetrievedDocsRef.current;
+                      newArr[newArr.length - 1].timestamp = new Date();
                     }
-
                     return newArr;
                   });
                 }
@@ -161,16 +163,15 @@ export default function Home() {
               typeof data === 'object' &&
               'retrieveDocuments' in data &&
               data.retrieveDocuments &&
+              typeof data.retrieveDocuments === 'object' &&
+              data.retrieveDocuments !== null &&
+              'documents' in data.retrieveDocuments &&
               Array.isArray(data.retrieveDocuments.documents)
             ) {
               const retrievedDocs = (data as RetrieveDocumentsNodeUpdates)
                 .retrieveDocuments.documents as PDFDocument[];
-
-              // // Handle documents here
               lastRetrievedDocsRef.current = retrievedDocs;
-              console.log('Retrieved documents:', retrievedDocs);
             } else {
-              // Clear the last retrieved documents if it's a direct answer
               lastRetrievedDocsRef.current = [];
             }
           } else {
@@ -181,7 +182,7 @@ export default function Home() {
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
-        title: 'Error',
+        title: 'Message Failed',
         description:
           'Failed to send message. Please try again.\n' +
           (error instanceof Error ? error.message : 'Unknown error'),
@@ -190,7 +191,8 @@ export default function Home() {
       setMessages((prev) => {
         const newArr = [...prev];
         newArr[newArr.length - 1].content =
-          'Sorry, there was an error processing your message.';
+          'Sorry, there was an error processing your message. Please try again.';
+        newArr[newArr.length - 1].timestamp = new Date();
         return newArr;
       });
     } finally {
@@ -199,165 +201,154 @@ export default function Home() {
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(e.target.files || []);
-    if (selectedFiles.length === 0) return;
-
-    const nonPdfFiles = selectedFiles.filter(
-      (file) => file.type !== 'application/pdf',
-    );
-    if (nonPdfFiles.length > 0) {
-      toast({
-        title: 'Invalid file type',
-        description: 'Please upload PDF files only',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsUploading(true);
-    try {
-      const formData = new FormData();
-      selectedFiles.forEach((file) => {
-        formData.append('files', file);
-      });
-
-      const response = await fetch('/api/ingest', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to upload files');
-      }
-
-      setFiles((prev) => [...prev, ...selectedFiles]);
-      toast({
-        title: 'Success',
-        description: `${selectedFiles.length} file${selectedFiles.length > 1 ? 's' : ''} uploaded successfully`,
-        variant: 'default',
-      });
-    } catch (error) {
-      console.error('Error uploading files:', error);
-      toast({
-        title: 'Upload failed',
-        description:
-          'Failed to upload files. Please try again.\n' +
-          (error instanceof Error ? error.message : 'Unknown error'),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
+  const handleFilesUploaded = (uploadedFiles: File[]) => {
+    setFiles((prev) => [...prev, ...uploadedFiles]);
+    setShowFileUpload(false);
+    toast({
+      title: 'Upload Successful',
+      description: `${uploadedFiles.length} file${uploadedFiles.length > 1 ? 's' : ''} uploaded and processed successfully`,
+    });
   };
 
   const handleRemoveFile = (fileToRemove: File) => {
     setFiles(files.filter((file) => file !== fileToRemove));
     toast({
-      title: 'File removed',
+      title: 'File Removed',
       description: `${fileToRemove.name} has been removed`,
-      variant: 'default',
     });
   };
 
+  const handlePreviewSource = (source: PDFDocument) => {
+    // In a real implementation, this would open a preview modal
+    console.log('Preview source:', source);
+    toast({
+      title: 'Source Preview',
+      description: `Previewing: ${source.metadata?.source || source.metadata?.filename}`,
+    });
+  };
+
+  const handleExportSources = (sources: PDFDocument[]) => {
+    const citations = sources.map((source, index) =>
+      `${index + 1}. ${source.metadata?.source || source.metadata?.filename || 'Unknown Source'} (Page ${source.metadata?.loc?.pageNumber || 'N/A'})`
+    ).join('\n');
+
+    navigator.clipboard.writeText(citations);
+    toast({
+      title: 'Sources Exported',
+      description: `${sources.length} source citations copied to clipboard`,
+    });
+  };
+
+  const hasMessages = messages.length > 0;
+  const lastAssistantMessage = messages
+    .filter(m => m.role === 'assistant')
+    .pop();
+
   return (
-    <main className="flex min-h-screen flex-col items-center p-4 md:p-24 max-w-5xl mx-auto w-full">
-      {messages.length === 0 ? (
-        <>
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <p className="font-medium text-muted-foreground max-w-md mx-auto">
-                This ai chatbot is an example template to accompany the book:{' '}
-                <a
-                  href="https://www.oreilly.com/library/view/learning-langchain/9781098167271/"
-                  className="underline hover:text-foreground"
-                >
-                  Learning LangChain (O'Reilly): Building AI and LLM
-                  applications with LangChain and LangGraph
-                </a>
-              </p>
-            </div>
-          </div>
-          <ExamplePrompts onPromptSelect={setInput} />
-        </>
-      ) : (
-        <div className="w-full space-y-4 mb-20">
-          {messages.map((message, i) => (
-            <ChatMessage key={i} message={message} />
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
-      )}
-
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background">
-        <div className="max-w-5xl mx-auto space-y-4">
-          {files.length > 0 && (
-            <div className="grid grid-cols-3 gap-2">
-              {files.map((file, index) => (
-                <FilePreview
-                  key={`${file.name}-${index}`}
-                  file={file}
-                  onRemove={() => handleRemoveFile(file)}
-                />
+    <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+      <div className="container mx-auto px-4 py-6 max-w-5xl">
+        {/* Welcome State or Messages */}
+        {!hasMessages ? (
+          <WelcomeState
+            onPromptSelect={setInput}
+            onFileUpload={() => setShowFileUpload(true)}
+            onStartChatting={() => {
+              // Focus on input when starting to chat
+              const inputElement = document.querySelector('textarea');
+              inputElement?.focus();
+            }}
+          />
+        ) : (
+          <div className="space-y-6">
+            {/* Messages Area */}
+            <div className="space-y-4 pb-32">
+              {messages.map((message, i) => (
+                <ChatMessage key={i} message={message} />
               ))}
+              <div ref={messagesEndRef} />
             </div>
-          )}
 
-          <form onSubmit={handleSubmit} className="relative">
-            <div className="flex gap-2 border rounded-md overflow-hidden bg-gray-50">
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileUpload}
-                accept=".pdf"
-                multiple
-                className="hidden"
+            {/* Sources Section */}
+            {lastAssistantMessage?.sources && lastAssistantMessage.sources.length > 0 && (
+              <Sources
+                sources={lastAssistantMessage.sources}
+                title="Sources for this response"
+                showMetadata={true}
+                expandable={true}
+                maxVisible={3}
+                onPreview={handlePreviewSource}
+                onExport={handleExportSources}
               />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="rounded-none h-12"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-              >
-                {isUploading ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  </div>
-                ) : (
-                  <Paperclip className="h-4 w-4" />
-                )}
-              </Button>
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={
-                  isUploading ? 'Uploading PDF...' : 'Send a message...'
-                }
-                className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 h-12 bg-transparent"
-                disabled={isUploading || isLoading || !threadId}
-              />
-              <Button
-                type="submit"
-                size="icon"
-                className="rounded-none h-12"
-                disabled={
-                  !input.trim() || isUploading || isLoading || !threadId
-                }
-              >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <ArrowUp className="h-4 w-4" />
-                )}
-              </Button>
+            )}
+          </div>
+        )}
+
+        {/* File Upload Modal */}
+        {showFileUpload && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-background rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-auto"
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold">Upload Documents</h2>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowFileUpload(false)}
+                  >
+                    ×
+                  </Button>
+                </div>
+                <FileUpload
+                  onFilesUploaded={handleFilesUploaded}
+                  maxFiles={10}
+                  maxSize={50 * 1024 * 1024} // 50MB
+                />
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* File Previews */}
+        {files.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4"
+          >
+            <div className="glass rounded-xl p-4">
+              <h3 className="text-sm font-medium mb-3">Uploaded Documents</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {files.map((file, index) => (
+                  <FilePreview
+                    key={`${file.name}-${index}`}
+                    file={file}
+                    onRemove={() => handleRemoveFile(file)}
+                  />
+                ))}
+              </div>
             </div>
-          </form>
+          </motion.div>
+        )}
+
+        {/* Chat Input */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-lg border-t">
+          <div className="container mx-auto max-w-5xl">
+            <ChatInput
+              onSubmit={handleSubmit}
+              onFileUpload={() => setShowFileUpload(true)}
+              placeholder="Ask about your documents..."
+              disabled={!threadId}
+              isUploading={isUploading}
+              isLoading={isLoading}
+              value={input}
+              onChange={setInput}
+            />
+          </div>
         </div>
       </div>
     </main>
