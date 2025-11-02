@@ -4,6 +4,8 @@ import type React from 'react';
 
 import { useToast } from '@/hooks/use-toast';
 import { useRef, useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 import { ChatMessage } from '@/components/chat-message';
 import { FilePreview } from '@/components/file-preview';
 import { ChatInput } from '@/components/chat-input';
