@@ -15,7 +15,7 @@ import {
   Filter,
   BarChart3,
   Clock,
-  Page,
+  File,
   Bookmark,
   Share2
 } from 'lucide-react';
