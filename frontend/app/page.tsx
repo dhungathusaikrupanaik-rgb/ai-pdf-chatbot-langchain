@@ -2,8 +2,6 @@
 
 import type React from 'react';
 
-export const dynamic = 'force-dynamic';
-
 import { useToast } from '@/hooks/use-toast';
 import { useRef, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
